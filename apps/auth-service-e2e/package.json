@@ -4,7 +4,7 @@
   "private": true,
   "nx": {
     "implicitDependencies": [
-      "@sellify/auth-service"
+      "auth-service"
     ],
     "targets": {
       "e2e": {
@@ -17,8 +17,8 @@
           "passWithNoTests": true
         },
         "dependsOn": [
-          "@sellify/auth-service:build",
-          "@sellify/auth-service:serve"
+          "auth-service:build",
+          "auth-service:serve"
         ]
       }
     }
