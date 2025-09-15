@@ -1,82 +1,330 @@
-# sellify
+# 🛒 Sellify - E-commerce Microservices Platform
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+A modern, scalable e-commerce platform built with microservices architecture using Nx monorepo. This project implements a distributed system with API Gateway, Authentication Service, and shared libraries for optimal performance and maintainability.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## 🏗️ Architecture Overview
 
-## Finish your CI setup
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   API Gateway   │────│  Auth Service   │────│   MongoDB       │
+│   (Port: 8080)  │    │  (Port: 6001)   │    │   (Primary DB)  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Rate Limiting │    │   Email Service │    │   Redis Cache   │
+│   CORS Support  │    │   JWT Auth      │    │   (Secondary)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   WebSocket     │    │   Kafka         │    │   AWS Cloud     │
+│   Real-time     │    │   Message Broker│    │   Deployment    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   ML/AI         │    │   Push Notif    │    │   CI/CD         │
+│   TensorFlow    │    │   Firebase      │    │   Pipeline      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/dqQFkTs40p)
+## 🚀 Technology Stack
 
+### **Architecture & Framework**
+- **Microservice Architecture** - Distributed system design for scalability
+- **Express.js** - Backend web framework for REST APIs
+- **Node.js** with **TypeScript** - Runtime and type safety
+- **Nx Monorepo** - Build system and workspace management
+- **WebSocket** - Real-time bidirectional communication
 
-## Run tasks
+### **Database & Storage**
+- **MongoDB** - Primary NoSQL database
+- **Redis** (ioredis) - Secondary database for caching and session management
+- **Prisma** - Database ORM for type-safe database access
 
-To run the dev server for your app, use:
+### **Authentication & Security**
+- **JWT** - Authentication and authorization tokens
+- **Nodemailer** - Email service integration
+- **EJS** - Email template engine
+- **Express Rate Limit** - API rate limiting
+- **CORS** - Cross-origin resource sharing
 
-```sh
+### **Infrastructure & DevOps**
+- **Docker** - Containerization platform
+- **AWS** - Cloud provider for deployment and production
+- **CI & CD** - Continuous Integration and Continuous Deployment
+- **Kafka** - Message broker for event streaming
+- **Web Push Notification** - Real-time notifications (Firebase)
+
+### **API & Documentation**
+- **Swagger/OpenAPI** - API documentation and testing
+- **API Testing** - Comprehensive API testing tools
+- **Domain Management** - DNS and domain configuration
+
+### **Development & Build Tools**
+- **Webpack** - Module bundling
+- **ESBuild** - Fast JavaScript bundler
+- **SWC** - Fast TypeScript/JavaScript compiler
+- **ts-node** - TypeScript execution environment
+- **Jest** - Testing framework
+- **Morgan** - HTTP request logging
+
+### **Machine Learning & Analytics**
+- **TensorFlow** - Machine Learning framework for AI features
+- **Data Analytics** - Business intelligence and reporting
+
+### **Frontend Technologies**
+- **Frontend Framework** - Modern UI framework (to be implemented)
+- **Responsive Design** - Mobile-first approach
+
+## 📁 Project Structure
+
+```
+sellify/
+├── apps/
+│   ├── api-gateway/          # Main API gateway service
+│   ├── api-gateway-e2e/      # E2E tests for API gateway
+│   ├── auth-service/         # Authentication microservice
+│   └── auth-service-e2e/     # E2E tests for auth service
+├── packages/
+│   ├── libs/
+│   │   ├── prisma/          # Database client
+│   │   └── redis/           # Redis client
+│   ├── error-handler/       # Global error handling
+│   └── middleware/          # Shared middleware
+├── prisma/
+│   └── schema.prisma        # Database schema
+└── generated/
+    └── prisma/              # Generated Prisma client
+```
+
+## 🛠️ Services
+
+### **API Gateway** (`apps/api-gateway`)
+- **Port**: 8080
+- **Purpose**: Central entry point for all client requests
+- **Features**:
+  - Request routing and load balancing
+  - Rate limiting (100 requests/15min for guests, 1000 for authenticated users)
+  - CORS configuration
+  - Request logging with Morgan
+  - Health check endpoint
+
+### **Auth Service** (`apps/auth-service`)
+- **Port**: 6001
+- **Purpose**: User authentication and authorization
+- **Features**:
+  - User registration and login
+  - JWT token management
+  - Email verification system
+  - Password reset functionality
+  - Swagger API documentation
+  - Cookie-based session management
+
+## 🗄️ Database Schema
+
+### **Users Model**
+```prisma
+model users {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String 
+  email     String   @unique
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  avatar    images?
+  following String[]
+}
+```
+
+### **Images Model**
+```prisma
+model images {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  file_id   String
+  url       String
+  userId    String    @db.ObjectId @unique
+  users     users    @relation(fields: [userId], references: [id])
+}
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- MongoDB database
+- Redis server
+- Docker (optional)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd sellify
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   Create a `.env` file in the root directory:
+   ```env
+   DATABASE_URL="mongodb://localhost:27017/sellify"
+   REDIS_DATABASE_URI="redis://localhost:6379"
+   JWT_SECRET="your-jwt-secret"
+   EMAIL_HOST="smtp.gmail.com"
+   EMAIL_PORT=587
+   EMAIL_USER="your-email@gmail.com"
+   EMAIL_PASS="your-app-password"
+   ```
+
+4. **Database Setup**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+### Development
+
+**Start all services in development mode:**
+```bash
+npm run dev
+```
+
+**Start individual services:**
+```bash
+# API Gateway
+npx nx serve api-gateway
+
+# Auth Service
 npx nx serve auth-service
 ```
 
-To create a production bundle:
-
-```sh
+**Build for production:**
+```bash
+npx nx build api-gateway
 npx nx build auth-service
 ```
 
-To see all available targets to run for a project, run:
+### Testing
 
-```sh
-npx nx show project auth-service
+**Run all tests:**
+```bash
+npx nx test
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/node:app demo
+**Run E2E tests:**
+```bash
+npx nx e2e auth-service-e2e
+npx nx e2e api-gateway-e2e
 ```
 
-To generate a new library, use:
+### Docker
 
-```sh
-npx nx g @nx/node:lib mylib
+**Build Docker images:**
+```bash
+npx nx docker:build auth-service
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+**Run with Docker:**
+```bash
+npx nx docker:run auth-service
+```
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 📚 API Documentation
 
+Once the services are running, you can access:
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **API Gateway**: http://localhost:8080
+- **Auth Service**: http://localhost:6001
+- **Swagger Docs**: http://localhost:6001/api-docs
+- **API Health Check**: http://localhost:8080/gateway-health
 
-## Install Nx Console
+## 🔧 Available Scripts
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start all services in development mode |
+| `npx nx serve <service>` | Start a specific service |
+| `npx nx build <service>` | Build a service for production |
+| `npx nx test <service>` | Run tests for a service |
+| `npx nx e2e <service>-e2e` | Run E2E tests |
+| `npx nx graph` | Visualize project dependencies |
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🏗️ Adding New Services
 
-## Useful links
+**Generate a new microservice:**
+```bash
+npx nx g @nx/node:app <service-name>
+```
 
-Learn more:
+**Generate a new shared library:**
+```bash
+npx nx g @nx/node:lib <library-name>
+```
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/node?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 🔐 Security Features
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- JWT-based authentication
+- Rate limiting to prevent abuse
+- CORS configuration
+- Input validation and sanitization
+- Secure cookie handling
+- Password hashing (bcrypt)
+
+## 📈 Performance Features
+
+- Redis caching for improved response times
+- Request compression
+- Connection pooling
+- Optimized database queries with Prisma
+- Microservices architecture for scalability
+- WebSocket support for real-time features
+- Kafka message streaming for event-driven architecture
+
+## 🚀 Future Roadmap
+
+### **Planned Integrations**
+- **Frontend Framework** - Modern React/Vue.js application
+- **Machine Learning** - TensorFlow integration for recommendation engine
+- **Real-time Features** - WebSocket implementation for live updates
+- **Message Streaming** - Kafka integration for event-driven architecture
+- **Push Notifications** - Firebase integration for mobile/web notifications
+- **Cloud Deployment** - AWS infrastructure setup
+- **CI/CD Pipeline** - Automated testing and deployment
+- **Domain Management** - Custom domain configuration
+- **Advanced Analytics** - Business intelligence dashboard
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Useful Links
+
+- [Nx Documentation](https://nx.dev)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Express.js Documentation](https://expressjs.com)
+- [MongoDB Documentation](https://docs.mongodb.com)
+- [Redis Documentation](https://redis.io/documentation)
+
+---
+
+**Built with ❤️ using Nx, Node.js, and TypeScript**

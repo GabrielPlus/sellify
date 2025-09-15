@@ -14,7 +14,7 @@ export const userRegistration = async (
         validationRegistrationData(req.body, "user");
     const {name, email} = req.body;
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.users.findUnique({ where: { email } });
 
     if(existingUser) {
         return next(new ValidationError("User already exists with this email!"));
